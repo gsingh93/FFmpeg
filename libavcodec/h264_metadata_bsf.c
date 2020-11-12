@@ -86,6 +86,7 @@ typedef struct H264MetadataContext {
     int flip;
 
     int level;
+    uint64_t width;
 } H264MetadataContext;
 
 
@@ -95,6 +96,12 @@ static int h264_metadata_update_sps(AVBSFContext *bsf,
     H264MetadataContext *ctx = bsf->priv_data;
     int need_vui = 0;
     int crop_unit_x, crop_unit_y;
+
+    if (ctx->width) {
+        uint64_t pic_width_mbs_minus1 = (ctx->width / 16) - 1;
+        sps->pic_width_in_mbs_minus1 = pic_width_mbs_minus1;
+        av_log(bsf, AV_LOG_INFO, "set sps width: %llu\n", pic_width_mbs_minus1);
+    }
 
     if (ctx->sample_aspect_ratio.num && ctx->sample_aspect_ratio.den) {
         // Table E-1.
@@ -763,6 +770,9 @@ static const AVOption h264_metadata_options[] = {
         0, AV_OPT_TYPE_CONST,
         { .i64 = FLIP_VERTICAL },   .flags = FLAGS, .unit = "flip" },
 
+    {"width", "Set width in pixels (will be rounded down to nearest multiple of 16)",
+        OFFSET(width), AV_OPT_TYPE_INT,
+        {.u64 = 0}, 0, ULONG_MAX, FLAGS, "width" },
     { "level", "Set level (table A-1)",
         OFFSET(level), AV_OPT_TYPE_INT,
         { .i64 = LEVEL_UNSET }, LEVEL_UNSET, 0xff, FLAGS, "level" },

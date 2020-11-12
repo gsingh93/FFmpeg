@@ -266,6 +266,7 @@ typedef struct AVOption {
      */
     union {
         int64_t i64;
+        uint64_t u64;
         double dbl;
         const char *str;
         /* TODO those are unused now */
